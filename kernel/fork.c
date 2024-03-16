@@ -2482,7 +2482,7 @@ bool legacy_clone_args_valid(const struct kernel_clone_args *kargs)
 long do_fork(unsigned long clone_flags, // 创建进程的标识位集合
 	      unsigned long stack_start,      // 用户态栈的起始地址
 	      unsigned long stack_size,       // 用户态栈的大小，一般情况下设置为0
-	      int __user *parent_tidptr,      // 指向用户空间中地址的指针，分配指向父进程的PID
+	      int __user *parent_tidptr,      // 指向用户空间中地址的指针，分配指向父、子进程的PID
 	      int __user *child_tidptr)
 {
 	struct kernel_clone_args args = {

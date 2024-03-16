@@ -433,7 +433,7 @@ struct zone {
 	/* Read-mostly fields */
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
-	unsigned long _watermark[NR_WMARK];
+	unsigned long _watermark[NR_WMARK]; // 页分配器使用的水线
 	unsigned long watermark_boost;
 
 	unsigned long nr_reserved_highatomic;
@@ -447,13 +447,14 @@ struct zone {
 	 * recalculated at runtime if the sysctl_lowmem_reserve_ratio sysctl
 	 * changes.
 	 */
-	long lowmem_reserve[MAX_NR_ZONES];
+	// 页分配器使用，当前区域保留多少页不能借给高区域
+	long lowmem_reserve[MAX_NR_ZONES]; /
 
 #ifdef CONFIG_NUMA
 	int node;
 #endif
-	struct pglist_data	*zone_pgdat;
-	struct per_cpu_pageset __percpu *pageset;
+	struct pglist_data	*zone_pgdat; // 指向内存节点的pglist_data实例
+	struct per_cpu_pageset __percpu *pageset; // 每处理器页的集合
 
 #ifndef CONFIG_SPARSEMEM
 	/*
@@ -464,7 +465,7 @@ struct zone {
 #endif /* CONFIG_SPARSEMEM */
 
 	/* zone_start_pfn == zone_start_paddr >> PAGE_SHIFT */
-	unsigned long		zone_start_pfn;
+	unsigned long		zone_start_pfn; // 当前区域的起始物理页号
 
 	/*
 	 * spanned_pages is the total pages spanned by the zone, including
@@ -501,11 +502,11 @@ struct zone {
 	 * mem_hotplug_begin/end(). Any reader who can't tolerant drift of
 	 * present_pages should get_online_mems() to get a stable value.
 	 */
-	atomic_long_t		managed_pages;
-	unsigned long		spanned_pages;
-	unsigned long		present_pages;
+	atomic_long_t		managed_pages; // 伙伴分配器管理的物理页的数量
+	unsigned long		spanned_pages; // 当前区域跨越的总页数，包括空洞
+	unsigned long		present_pages; // 当前区域存在的物理页的数量，不包括空洞
 
-	const char		*name;
+	const char		*name; // 区域名称
 
 #ifdef CONFIG_MEMORY_ISOLATION
 	/*
@@ -527,7 +528,7 @@ struct zone {
 	ZONE_PADDING(_pad1_)
 
 	/* free areas of different sizes */
-	struct free_area	free_area[MAX_ORDER];
+	struct free_area	free_area[MAX_ORDER]; // 不同长度的空间区域
 
 	/* zone flags, see below */
 	unsigned long		flags;
@@ -708,13 +709,14 @@ struct deferred_split {
  */
 struct bootmem_data;
 typedef struct pglist_data {
-	struct zone node_zones[MAX_NR_ZONES];
-	struct zonelist node_zonelists[MAX_ZONELISTS];
-	int nr_zones;
-#ifdef CONFIG_FLAT_NODE_MEM_MAP	/* means !SPARSEMEM */
-	struct page *node_mem_map;
+	struct zone node_zones[MAX_NR_ZONES]; // 内存区域数组
+	struct zonelist node_zonelists[MAX_ZONELISTS]; // 备用区域列表
+	int nr_zones; // 该节点所包含的zone数量
+#ifdef CONFIG_FLAT_NODE_MEM_MAP	/* means !SPARSEMEM 除了稀疏内存模型以外 */
+  // 页描述符数组，每个物理页对应一个页描述符
+	struct page *node_mem_map; 
 #ifdef CONFIG_PAGE_EXTENSION
-	struct page_ext *node_page_ext;
+	struct page_ext *node_page_ext; // 页的扩展属性
 #endif
 #endif
 #if defined(CONFIG_MEMORY_HOTPLUG) || defined(CONFIG_DEFERRED_STRUCT_PAGE_INIT)
@@ -730,11 +732,12 @@ typedef struct pglist_data {
 	 */
 	spinlock_t node_size_lock;
 #endif
-	unsigned long node_start_pfn;
-	unsigned long node_present_pages; /* total number of physical pages */
+	unsigned long node_start_pfn; // 该节点的起始物理页号
+	unsigned long node_present_pages; /* total number of physical pages 物理页总数 */
 	unsigned long node_spanned_pages; /* total size of physical page
-					     range, including holes */
-	int node_id;
+					     range, including holes 
+							 物理页范围的总长度，包括空洞 */
+	int node_id; // 节点标识符
 	wait_queue_head_t kswapd_wait;
 	wait_queue_head_t pfmemalloc_wait;
 	struct task_struct *kswapd;	/* Protected by

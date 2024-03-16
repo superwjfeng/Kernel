@@ -460,19 +460,28 @@ enum page_entry_size {
  * to the functions called when a no-page or a wp-page exception occurs.
  */
 struct vm_operations_struct {
-	void (*open)(struct vm_area_struct * area);
-	void (*close)(struct vm_area_struct * area);
-	int (*split)(struct vm_area_struct * area, unsigned long addr);
-	int (*mremap)(struct vm_area_struct * area);
+	void (*open)(struct vm_area_struct * area); // 创建虚拟内存区域
+	void (*close)(struct vm_area_struct * area); // 删除虚拟内存区域
+	int (*split)(struct vm_area_struct * area, unsigned long addr); 
+	int (*mremap)(struct vm_area_struct * area); // 移动/重新映射虚拟内存区域
+	/* 访问文件映射的虚拟页时，如果没有映射到物理页，生成缺页异常
+		异常处理程序调用fault就去来把文件的数据读到文件页缓存当中 */
 	vm_fault_t (*fault)(struct vm_fault *vmf);
+	// 与fault类似，区别是huge_fault方法针对使用透明巨型页的文件映射
 	vm_fault_t (*huge_fault)(struct vm_fault *vmf,
 			enum page_entry_size pe_size);
+	/* 谈文件映射的虚拟页时，如果没有映射到物理页，生成缺页异常，
+		异常处理程序除了谈入正在访问的文件页，还会预读后续的文件页，
+		调用map_pages方法在文件的页缓存中分配物理页 */
 	void (*map_pages)(struct vm_fault *vmf,
 			pgoff_t start_pgoff, pgoff_t end_pgoff);
 	unsigned long (*pagesize)(struct vm_area_struct * area);
 
 	/* notification that a previously read-only page is about to become
 	 * writable, if an error is returned it will cause a SIGBUS */
+
+	/* 第一次写私有的文件映射时，生成页错误异常，异常处理程序执行写时复制，调用 page_mkwrite
+		方法以通知文件系统页即将会变成可写状态，以便文件系统检查是否允许写，或者等待页进入合适的状态 */
 	vm_fault_t (*page_mkwrite)(struct vm_fault *vmf);
 
 	/* same as page_mkwrite when using VM_PFNMAP|VM_MIXEDMAP */

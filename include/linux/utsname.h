@@ -21,10 +21,11 @@ enum uts_proc {
 struct user_namespace;
 extern struct user_namespace init_user_ns;
 
+
 struct uts_namespace {
-	struct kref kref;
+	struct kref kref; // 引用计数器，跟踪内核中有多少地方使用了 uts_namespace
 	struct new_utsname name;
-	struct user_namespace *user_ns;
+	struct user_namespace *user_ns; // 用于限制每个用户资源使用的信息
 	struct ucounts *ucounts;
 	struct ns_common ns;
 } __randomize_layout;

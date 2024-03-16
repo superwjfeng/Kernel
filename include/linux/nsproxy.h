@@ -30,12 +30,12 @@ struct fs_struct;
  */
 struct nsproxy {
 	atomic_t count;
-	struct uts_namespace *uts_ns;
+	struct uts_namespace *uts_ns; // 运行内核的信息，UNIX Timesharing System
 	struct ipc_namespace *ipc_ns;
-	struct mnt_namespace *mnt_ns;
-	struct pid_namespace *pid_ns_for_children;
-	struct net 	     *net_ns;
-	struct time_namespace *time_ns;
+	struct mnt_namespace *mnt_ns; // 已经装载的文件系统的视图
+	struct pid_namespace *pid_ns_for_children;   // PID命名空间
+	struct net 	     *net_ns;                    // 网络命名空间
+	struct time_namespace *time_ns;              // 时钟
 	struct time_namespace *time_ns_for_children;
 	struct cgroup_namespace *cgroup_ns;
 };

@@ -28,10 +28,12 @@ struct pid_namespace {
 	struct idr idr;
 	struct rcu_head rcu;
 	unsigned int pid_allocated;
+	/* child_reaper指向一个PID命名空间中的全局进程，
+	  它起到一个类似init的作用，对孤儿进程调用wait4 */
 	struct task_struct *child_reaper;
 	struct kmem_cache *pid_cachep;
-	unsigned int level;
-	struct pid_namespace *parent;
+	unsigned int level;           // 当前命名空间在命名空间层次结构中的层级
+	struct pid_namespace *parent; // 指向父命名空间的指针，初始命名空间为0，依次递增
 #ifdef CONFIG_PROC_FS
 	struct vfsmount *proc_mnt;
 	struct dentry *proc_self;

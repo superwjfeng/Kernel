@@ -1361,6 +1361,7 @@ static void dequeue_rt_entity(struct sched_rt_entity *rt_se, unsigned int flags)
 	enqueue_top_rt_rq(&rq->rt);
 }
 
+// 更新调度信息，将调度实体插入到相应优先级队列的末尾
 /*
  * Adding/removing a task to/from a priority array:
  */
@@ -1378,14 +1379,17 @@ enqueue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 		enqueue_pushable_task(rq, p);
 }
 
+// 从优先级队列中删除实时进程，并更新调度信息，然后把这个进程添加到队尾
 static void dequeue_task_rt(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct sched_rt_entity *rt_se = &p->rt;
 
-	update_curr_rt(rq);
+	update_curr_rt(rq); // 更新调度数据信息等等
+	
+	// 将rt_se从运行队列当中删除，然后添加到队列尾部
 	dequeue_rt_entity(rt_se, flags);
 
-	dequeue_pushable_task(rq, p);
+	dequeue_pushable_task(rq, p); // 从hash表当中删除
 }
 
 /*
@@ -1590,13 +1594,15 @@ static struct sched_rt_entity *pick_next_rt_entity(struct rq *rq,
 	struct list_head *queue;
 	int idx;
 
+	// 找到第一个可用的实体
 	idx = sched_find_first_bit(array->bitmap);
 	BUG_ON(idx >= MAX_RT_PRIO);
 
+	// 从链表组中找到对应的链表
 	queue = array->queue + idx;
 	next = list_entry(queue->next, struct sched_rt_entity, run_list);
 
-	return next;
+	return next; // 返回找到的运行实体
 }
 
 static struct task_struct *_pick_next_task_rt(struct rq *rq)

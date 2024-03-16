@@ -512,6 +512,7 @@ struct cfs_rq {
 	 * 'curr' points to currently running entity on this cfs_rq.
 	 * It is set to NULL otherwise (i.e when none are currently running).
 	 */
+	// sched_entity 是可被内核调度的实体
 	struct sched_entity	*curr;
 	struct sched_entity	*next;
 	struct sched_entity	*last;
@@ -595,19 +596,19 @@ static inline int rt_bandwidth_enabled(void)
 
 /* Real-Time classes' related field in a runqueue: */
 struct rt_rq {
-	struct rt_prio_array	active;
-	unsigned int		rt_nr_running;
-	unsigned int		rr_nr_running;
+	struct rt_prio_array	active;  // 优先级队列
+	unsigned int		rt_nr_running; // 在RT运行队列当中所有活动的任务数
+	unsigned int		rr_nr_running; // 在RT运行队列上可运行的实时任务的数量
 #if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED
 	struct {
-		int		curr; /* highest queued rt task prio */
+		int		curr; /* highest queued rt task prio 当前RT任务的最高优先级 */
 #ifdef CONFIG_SMP
-		int		next; /* next highest */
+		int		next; /* next highest 下一个要运行的RT任务的优先级，如果两个任务都有最高优先级，curr==next*/
 #endif
 	} highest_prio;
 #endif
 #ifdef CONFIG_SMP
-	unsigned long		rt_nr_migratory;
+	unsigned long		rt_nr_migratory; // 队列上可以被迁移到其他运行队列的实时任务的数量
 	unsigned long		rt_nr_total;
 	int			overloaded;
 	struct plist_head	pushable_tasks;
@@ -858,7 +859,7 @@ struct rq {
 	 * nr_running and cpu_load should be in the same cacheline because
 	 * remote CPUs use both these fields when doing load calculation.
 	 */
-	unsigned int		nr_running;
+	unsigned int		nr_running; // 就绪队列上可运行进程的数目
 #ifdef CONFIG_NUMA_BALANCING
 	unsigned int		nr_numa_running;
 	unsigned int		nr_preferred_running;
@@ -902,8 +903,8 @@ struct rq {
 	 */
 	unsigned long		nr_uninterruptible;
 
-	struct task_struct __rcu	*curr;
-	struct task_struct	*idle;
+	struct task_struct __rcu	*curr; // 指向当前运行的进程的task_struct对象
+	struct task_struct	*idle; // 指向idle进程的task_struct对象
 	struct task_struct	*stop;
 	unsigned long		next_balance;
 	struct mm_struct	*prev_mm;
@@ -1705,22 +1706,26 @@ extern const u32		sched_prio_to_wmult[40];
 
 #define RETRY_TASK		((void *)-1UL)
 
+/* 进程调度器类 */
 struct sched_class {
+	/* Kernel中有多个调度类，按照调度优先级拍成一个链表 */
 	const struct sched_class *next;
 
 #ifdef CONFIG_UCLAMP_TASK
 	int uclamp_enabled;
 #endif
-
+	/* 将进程加入到执行队列中，即将调度实体（即进程）存放到红黑树中，并对nr_running自动+1 */
 	void (*enqueue_task) (struct rq *rq, struct task_struct *p, int flags);
+	/* 将进程从执行队列中删除，并对nr_running自动-1 */
 	void (*dequeue_task) (struct rq *rq, struct task_struct *p, int flags);
+	/* 放弃CPU执行权限，实际上此函数执行先出队后入队，在这种情况下直接将调度实体存放在红黑树的最右端 */
 	void (*yield_task)   (struct rq *rq);
 	bool (*yield_to_task)(struct rq *rq, struct task_struct *p, bool preempt);
-
+	/* 专门用于检查当前进程是否可被新进程抢占 */
 	void (*check_preempt_curr)(struct rq *rq, struct task_struct *p, int flags);
-
+	/* 选择下一个要运行的进程，prev是将要被调度出的任务，返回值是将要被调度的任务 */
 	struct task_struct *(*pick_next_task)(struct rq *rq);
-
+	/* 当一个任务将要被调度出时队列时执行 */
 	void (*put_prev_task)(struct rq *rq, struct task_struct *p);
 	void (*set_next_task)(struct rq *rq, struct task_struct *p, bool first);
 
@@ -1789,11 +1794,11 @@ static inline void set_next_task(struct rq *rq, struct task_struct *next)
 #define for_each_class(class) \
 	for_class_range(class, sched_class_highest, NULL)
 
-extern const struct sched_class stop_sched_class;
-extern const struct sched_class dl_sched_class;
-extern const struct sched_class rt_sched_class;
-extern const struct sched_class fair_sched_class;
-extern const struct sched_class idle_sched_class;
+extern const struct sched_class stop_sched_class; // 停机调度类
+extern const struct sched_class dl_sched_class;   // 限期调度类
+extern const struct sched_class rt_sched_class;   // 实时调度类
+extern const struct sched_class fair_sched_class; // 公平调度类
+extern const struct sched_class idle_sched_class; // 空闲调度类
 
 static inline bool sched_stop_runnable(struct rq *rq)
 {

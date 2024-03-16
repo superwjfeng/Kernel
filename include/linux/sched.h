@@ -448,20 +448,20 @@ struct sched_statistics {
 
 struct sched_entity {
 	/* For load-balancing: */
-	struct load_weight		load;
+	struct load_weight		load; // 指定权重，决定了各个实体占队列总负荷的比例
 	unsigned long			runnable_weight;
-	struct rb_node			run_node;
+	struct rb_node			run_node; // 红黑树节点
 	struct list_head		group_node;
-	unsigned int			on_rq;
+	unsigned int			on_rq; // 表示该实体当前是否在就绪队列上接受调度
 
 	u64				exec_start;
-	u64				sum_exec_runtime;
+	u64				sum_exec_runtime; // 跟踪运行时间
 	u64				vruntime;
 	u64				prev_sum_exec_runtime;
 
 	u64				nr_migrations;
 
-	struct sched_statistics		statistics;
+	struct sched_statistics		statistics; // 用于调度统计
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	int				depth;
@@ -484,20 +484,20 @@ struct sched_entity {
 };
 
 struct sched_rt_entity {
-	struct list_head		run_list; //指向运行队列的指针
-	unsigned long			timeout;
-	unsigned long			watchdog_stamp;
-	unsigned int			time_slice;
-	unsigned short			on_rq;
+	struct list_head		run_list; // 指向运行队列的指针，用于加入运行队列
+	unsigned long			timeout;    // 设置时间超时
+	unsigned long			watchdog_stamp; // 用于记录jiffies值
+	unsigned int			time_slice;     // 时间片
+	unsigned short			on_rq;        
 	unsigned short			on_list;
 
-	struct sched_rt_entity		*back;
+	struct sched_rt_entity		*back; // 临时用于从上往下连接到RT调度实体使用
 #ifdef CONFIG_RT_GROUP_SCHED
-	struct sched_rt_entity		*parent;
+	struct sched_rt_entity		*parent; // 指向父RT实体
 	/* rq on which this entity is (to be) queued: */
-	struct rt_rq			*rt_rq;
+	struct rt_rq			*rt_rq; // RT调度实体所属的实时运行队列，被调度
 	/* rq "owned" by this entity/group: */
-	struct rt_rq			*my_q;
+	struct rt_rq			*my_q; // RT调度实体所拥有的实时运行队列，用于管理子任务或子组任务
 #endif
 } __randomize_layout;
 
@@ -676,7 +676,7 @@ struct task_struct {
 	int				prio;
 	int				static_prio;
 	int				normal_prio;
-	unsigned int			rt_priority;
+	unsigned int			rt_priority; //实时优先级，用它计算实时进程调度时的weight值
 
 	const struct sched_class	*sched_class;
 	struct sched_entity		se;
@@ -747,7 +747,7 @@ struct task_struct {
 	int				exit_code;
 	int				exit_signal;
 	/* The signal sent when the parent dies: */
-	int				pdeath_signal;
+	int				pdeath_signal; //父进程终止时向子进程发送的信号
 	/* JOBCTL_*, siglock protected: */
 	unsigned long			jobctl;
 
@@ -796,7 +796,7 @@ struct task_struct {
 	struct restart_block		restart_block;
 
 	pid_t				pid;  // 进程标识符，用来代表一个进程
-	pid_t				tgid;
+	pid_t				tgid; // 线程组组号
 
 #ifdef CONFIG_STACKPROTECTOR
 	/* Canary value for the -fstack-protector GCC feature: */
@@ -832,11 +832,11 @@ struct task_struct {
 
 	/* PID/PID hash table linkage. */
 	struct pid			*thread_pid;
-	struct hlist_node		pid_links[PIDTYPE_MAX]; // 进程编号、进程组标识符和会话标识符
-	struct list_head		thread_group;
+	struct hlist_node		pid_links[PIDTYPE_MAX]; // PID与PID哈希链表的联系
+	struct list_head		thread_group; //线程链表
 	struct list_head		thread_node;
 
-	struct completion		*vfork_done;
+	struct completion		*vfork_done; //供vfork() 使用
 
 	/* CLONE_CHILD_SETTID: */
 	int __user			*set_child_tid;
@@ -864,7 +864,7 @@ struct task_struct {
 	unsigned long			nivcsw;
 
 	/* Monotonic time in nsecs: */
-	u64				start_time;
+	u64				start_time; // 进程创建的时间
 
 	/* Boot based time in nsecs: */
 	u64				start_boottime;
@@ -923,9 +923,9 @@ struct task_struct {
 
 	/* 信号处理 */
 	/* Signal handlers: */
-	struct signal_struct		*signal;
+	struct signal_struct		*signal; // 信号处理函数
 	struct sighand_struct __rcu		*sighand;
-	sigset_t			blocked;
+	sigset_t			blocked; // 进程当前要阻塞的信号，每个信号对应一位
 	sigset_t			real_blocked;
 	/* Restored if set_restore_sigmask() was used: */
 	sigset_t			saved_sigmask;
@@ -1296,6 +1296,7 @@ struct task_struct {
 	randomized_struct_fields_end
 
 	/* CPU-specific state of this task: */
+	// 进程的CPU状态，切换时，要保存到停止进程的task_struct中
 	struct thread_struct		thread;
 
 	/*

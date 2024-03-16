@@ -52,20 +52,26 @@ enum pid_type
  */
 
 struct upid {
-	int nr;
-	struct pid_namespace *ns;
+	int nr; // 表示PID的数值，也就是task_struct里的pid_t pid的值
+	struct pid_namespace *ns; // 指向该ID所属的命名空间的指针
 };
 
 struct pid
 {
-	refcount_t count;
+	refcount_t count; // 引用计数器
+	/* 可以看到该进程的命名空间的数目 
+	  等价于包含该进程的命名空间在命名空间层次结构中的深度 */
 	unsigned int level;
 	/* lists of tasks that use this pid */
+	/* 哈希链表头的数组，每个元素对应于一个ID类型，
+	  因为一个ID可能分别是几个进程的不同TGID、PID、PGID和SID */
 	struct hlist_head tasks[PIDTYPE_MAX];
 	/* wait queue for pidfd notifications */
 	wait_queue_head_t wait_pidfd;
 	struct rcu_head rcu;
-	struct upid numbers[1];
+	/* upid实例的数组，每个数组项都对应于一个命名空间
+	  处于结构体末尾，可以被扩展*/
+	struct upid numbers[1]; 
 };
 
 extern struct pid init_struct_pid;
