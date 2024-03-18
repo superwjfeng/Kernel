@@ -676,15 +676,15 @@ struct task_struct {
 	int				prio;
 	int				static_prio;
 	int				normal_prio;
-	unsigned int			rt_priority; //实时优先级，用它计算实时进程调度时的weight值
+	unsigned int			rt_priority; // 实时优先级，用它计算实时进程调度时的weight值
 
 	const struct sched_class	*sched_class;
-	struct sched_entity		se;
-	struct sched_rt_entity		rt;
+	struct sched_entity		se; // 用于CFS调度
+	struct sched_rt_entity		rt; // 用于实时调度
 #ifdef CONFIG_CGROUP_SCHED
 	struct task_group		*sched_task_group;
 #endif
-	struct sched_dl_entity		dl;
+	struct sched_dl_entity		dl; // 用于期限调度
 
 #ifdef CONFIG_UCLAMP_TASK
 	/* Clamp values requested for a scheduling entity */

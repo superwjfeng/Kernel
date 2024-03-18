@@ -903,9 +903,9 @@ struct rq {
 	 */
 	unsigned long		nr_uninterruptible;
 
-	struct task_struct __rcu	*curr; // 指向当前运行的进程的task_struct对象
-	struct task_struct	*idle; // 指向idle进程的task_struct对象
-	struct task_struct	*stop;
+	struct task_struct __rcu	*curr; // 指向rq中当前运行的进程的task_struct对象
+	struct task_struct	*idle; // 指向idle调度类的task_struct对象
+	struct task_struct	*stop; // 指向stop调度类的task_struct对象
 	unsigned long		next_balance;
 	struct mm_struct	*prev_mm;
 
@@ -1730,12 +1730,17 @@ struct sched_class {
 	void (*set_next_task)(struct rq *rq, struct task_struct *p, bool first);
 
 #ifdef CONFIG_SMP
+	/* 检查选中的 cpu 在其 sched_domain 中是否负载是平衡的，如果不平衡则需要对任务进行迁移。
+    并不是所有的 scheduling class 都会实现该方法 */
 	int (*balance)(struct rq *rq, struct task_struct *prev, struct rq_flags *rf);
+	/*当系统调用 fork, exec 创建一个新的 task 时，在 SMP 系统中需要选择一个合理的
+    runqueue 来将该 task 入队。Scheduler 此时需要考虑负载均衡问题*/
 	int  (*select_task_rq)(struct task_struct *p, int task_cpu, int sd_flag, int flags);
+	/* 将任务迁移到目标 CPU 上*/
 	void (*migrate_task_rq)(struct task_struct *p, int new_cpu);
-
+	/* 唤醒任务*/
 	void (*task_woken)(struct rq *this_rq, struct task_struct *task);
-
+	/* 修改任务的 CPU 偏好，即其可以被调度到哪些 CPU 上运行 */
 	void (*set_cpus_allowed)(struct task_struct *p,
 				 const struct cpumask *newmask);
 
